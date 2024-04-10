@@ -30,7 +30,7 @@ message["To"] = credentials.RECIPIENT_EMAIL
 message["Subject"] = "Test Email"
 
 # Add body to email
-body = "This is a test email."
+body = "This is a test signed email."
 # Calculate hash of the body
 digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
 digest.update(body.encode())
@@ -72,6 +72,14 @@ server.login(credentials.SENDER_EMAIL, credentials.PASSWORD)  # Login
 
 # Send the email
 server.sendmail(credentials.SENDER_EMAIL, credentials.RECIPIENT_EMAIL, message.as_string())
+
+# Send unsigned email
+message_unsigned = MIMEMultipart()
+message_unsigned["From"] = credentials.SENDER_EMAIL
+message_unsigned["To"] = credentials.RECIPIENT_EMAIL
+message_unsigned["Subject"] = "Unsigned Test Email"
+message_unsigned.attach(MIMEText(body, "plain"))
+server.sendmail(credentials.SENDER_EMAIL, credentials.RECIPIENT_EMAIL, message_unsigned.as_string())
 
 # Quit the server
 server.quit()

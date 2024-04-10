@@ -32,12 +32,13 @@ while True:
     try:
         print("Checking for new emails...")
         server.select_folder("INBOX")
-        #messages = server.search("UNSEEN")
+        messages = server.search("UNSEEN")
 
         # Fetch lastest email by yuaj@bc.edu
         messages = server.search(["FROM", "yuaj@bc.edu", "UNSEEN"])
         print(f"Found {len(messages)} new unread emails.")
-        for msgid, data in server.fetch(messages[:1], "RFC822").items():
+        for msgid, data in server.fetch(messages, "RFC822").items():
+            signed = False
             print("reading email")
 
             # Account for empty emails
@@ -63,49 +64,53 @@ while True:
             print("Subject:", cleaned_subject)
             print("From:", cleaned_from)
             print("Date:", date)
+            # Check for digital signature and public key in email headers
+            if "X-Digital-Signature" not in email_message:
+                print("Email is not signed. Skipping...")
+            else:
+                signed = True
+                # Print the digital signature
+                signature = email_message["X-Digital-Signature"]
+                print("Digital Signature:", signature)
 
-            # Print the digital signature
-            signature = email_message["X-Digital-Signature"]
-            print("Digital Signature:", signature)
+                # Get debug public key from email
+                public_key_str = email_message["X-Public-Key-Debug"]
+                public_key = None
+                print("Public Key str:", public_key_str)
+                try:
+                    # Restore cleaned public key
+                    public_key_str = "-----BEGIN PUBLIC KEY-----\n" + public_key_str + "\n-----END PUBLIC KEY-----"
+                    public_key_bytes = public_key_str.encode()
+                    public_key = serialization.load_pem_public_key(public_key_bytes, backend=default_backend())
+                except Exception as e:
+                    print("Error loading public key:", e)
 
-            # Get debug public key from email
-            public_key_str = email_message["X-Public-Key-Debug"]
-            public_key = None
-            print("Public Key str:", public_key_str)
-            try:
-                # Restore cleaned public key
-                public_key_str = "-----BEGIN PUBLIC KEY-----\n" + public_key_str + "\n-----END PUBLIC KEY-----"
-                public_key_bytes = public_key_str.encode()
-                public_key = serialization.load_pem_public_key(public_key_bytes, backend=default_backend())
-            except Exception as e:
-                print("Error loading public key:", e)
+                # Calculate hash of the body using SHA-256
+                email_body = email_message.get_payload()
+                if isinstance(email_body, list):
+                    # If the email body is multipart (i.e., a list), concatenate its parts into a single string
+                    email_body = ''.join(part.get_payload(decode=True).decode() for part in email_body)
+                digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+                digest.update(email_body.encode())
+                hash_body = digest.finalize()
 
-            # Calculate hash of the body using SHA-256
-            email_body = email_message.get_payload()
-            if isinstance(email_body, list):
-                # If the email body is multipart (i.e., a list), concatenate its parts into a single string
-                email_body = ''.join(part.get_payload(decode=True).decode() for part in email_body)
-            digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
-            digest.update(email_body.encode())
-            hash_body = digest.finalize()
+                # Decrypt the signature using the public key
+                signature = base64.b64decode(signature)
 
-            # Decrypt the signature using the public key
-            signature = base64.b64decode(signature)
-
-            # Verify the signature
-            try:
-                public_key.verify(
-                    signature,
-                    hash_body,
-                    padding.PSS(
-                        mgf=padding.MGF1(hashes.SHA256()),
-                        salt_length=padding.PSS.MAX_LENGTH
-                    ),
-                    hashes.SHA256()
-                )
-                print("Signature verified.")
-            except Exception as e:
-                print("Signature verification failed:", e)
+                # Verify the signature
+                try:
+                    public_key.verify(
+                        signature,
+                        hash_body,
+                        padding.PSS(
+                            mgf=padding.MGF1(hashes.SHA256()),
+                            salt_length=padding.PSS.MAX_LENGTH
+                        ),
+                        hashes.SHA256()
+                    )
+                    print("Signature verified.")
+                except Exception as e:
+                    print("Signature verification failed:", e)
 
             # Save the entire email message including headers to folder emails
 
@@ -118,6 +123,13 @@ while True:
             print("Email saved.")
             # Mark email as unread for debugging
             server.remove_flags(msgid, [b"\\Seen"])
+
+            # Sort emails by signed/unsigned
+            # Add signed label to signed emails
+            if signed:
+                server.add_gmail_labels(msgid, ["Signed"])
+            else:
+                server.add_gmail_labels(msgid, ["Unsigned"])
 
         print("Waiting for 5 minutes before checking again...")
         time.sleep(300)  # Sleep for 5 minutes before checking again
