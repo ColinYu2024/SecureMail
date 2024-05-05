@@ -1,20 +1,12 @@
 import os
 import re
-import datetime
-import email
-import imapclient
-import requests
 import base64
 from email.header import decode_header
 from email.policy import default as email_default_policy
 from email.parser import BytesParser
-from email import message_from_binary_file
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.backends import default_backend
-from google_auth_oauthlib.flow import InstalledAppFlow
 
-
-from google.oauth2.credentials import Credentials
 from dataclasses import dataclass
 
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = 'True'
@@ -90,8 +82,11 @@ class EmailHandler:
         try:
             unread_emails = self.email_manager.fetch_unread_emails()
             if unread_emails:
-                msgid = unread_emails[0]  # Process only the first unread email
-                self.process_email(msgid)
+                # Sort the unread emails by date in descending order to get the most recent one
+                unread_emails.sort(reverse=True)
+                for msgid in unread_emails:
+                    self.process_email(msgid)
+                    break  # Process only the most recent unread email
             else:
                 print("No unread emails found. Exiting...")
         except Exception as e:
@@ -129,25 +124,14 @@ class EmailHandler:
                     else:
                         print("Signature not found. Assuming email is not signed.")
                         self.label_email(msgid, None, email_body, None)
-                    self.save_email(data, cleaned_subject, cleaned_from)
-                    print("Email saved.")
                     self.current_email_data = Message(cleaned_from, date, cleaned_subject, email_body, bool(signature))
                 else:
                     print("Signature not found. Assuming email is not signed.")
                     self.label_email(msgid, None, email_body, None)
                     print("This email has no text.")
-                    self.save_email(data, cleaned_subject, cleaned_from)
-                    print("Email saved.")
                     self.current_email_data = Message(cleaned_from, date, cleaned_subject, email_body, False)
         except Exception as e:
             print("Error processing email:", e)
-
-    def save_email(self, data, cleaned_subject, cleaned_from):
-        folder_name = "emails"
-        if not os.path.isdir(folder_name):
-            os.mkdir(folder_name)
-        with open(f"emails/{cleaned_subject}_{cleaned_from}.eml", "wb") as file:
-            file.write(data[b"RFC822"])
 
     def label_email(self, msgid, public_key_str, email_body, signature):
         server = self.email_manager.server

@@ -50,10 +50,13 @@ class EmailViewer(QWidget):
             # Format date nicely
             formatted_date = datetime.strptime(message.date, "%a, %d %b %Y %H:%M:%S %z").strftime("%B %d, %Y %I:%M %p")
 
+            sender_name, sender_email = "", ""
             # Extract sender's email from sender
-            sender_name, sender_email, _ = message.sender.split('_')
-            print(sender_name, sender_email)
-            sender_email = sender_email.strip('_').strip()
+            if '_' in message.sender:
+                sender_name, sender_email, _ = message.sender.split('_')
+                print(sender_name, sender_email)
+                sender_email = sender_email.strip('_').strip()
+
 
             self.sender_label.setText(f"From: {sender_name.strip()} ({sender_email})")
             self.date_label.setText(f"Date: {formatted_date}")
