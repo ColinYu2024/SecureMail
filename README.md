@@ -1,9 +1,9 @@
 
-# TBD Project
+# SecureMail Project
 
 ## Overview
-TBD is an application designed to read and send signed emails. It lets users read and verify emails as well as signed emails. This program was designed to verify if the email you have received is truely from the person who sent it with a signed hash signature.
-This application is only in a proof of concept as many features are very limited in scope and currently can only verify emails sent by this program.
+SecureMail is an application designed to read and send signed emails. It lets users read and verify emails as well as signed emails. This program was designed to verify if the email you have received is truely from the person who sent it with a signed hash signature.
+This application is only a proof of concept as many features are very limited in scope and currently can only verify emails sent by this program.
 
 ## Intended Features
 - Read emails: View sender, date, subject, body, and verification status of received emails.
@@ -17,7 +17,7 @@ This application is only in a proof of concept as many features are very limited
 - **google_auth**: Authentication library for accessing Google services.
 
 ## Usage
-To use TBD, follow these steps:
+To use SecureMail, follow these steps:
 1. Run the executable file
 2. When prompted, login and follow the on poppup instructions.
 3. When returning to the main screen choose whether to read or send emails.
