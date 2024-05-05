@@ -12,7 +12,8 @@ from email import message_from_binary_file
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.backends import default_backend
 from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request as AuthRequest
+
+
 from google.oauth2.credentials import Credentials
 from dataclasses import dataclass
 
@@ -30,45 +31,8 @@ class Message:
     signature: bool = False
 
 class EmailManager:
-    def __init__(self, token_path='token.json', creds_path='credentials.json'):
-        self.token_path = token_path
-        self.creds_path = creds_path
-        self.server = None
-
-    def login(self):
-        creds = self._get_credentials()
-        if creds is None or not creds.valid:
-            creds = self._refresh_credentials(creds)
-        self._save_credentials(creds)
-        self._initialize_imap(creds)
-
-    def _get_credentials(self):
-        if os.path.exists(self.token_path) and os.path.getsize(self.token_path) > 0:
-            return Credentials.from_authorized_user_file(self.token_path)
-        return None
-
-    def _refresh_credentials(self, creds):
-        if not creds or not creds.expired:
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-            expiry_time = datetime.datetime.now() + datetime.timedelta(seconds=3600)  # 1 hour
-            creds.expiry = expiry_time
-        else:
-            creds.refresh(AuthRequest())
-        return creds
-
-    def _save_credentials(self, creds):
-        with open(self.token_path, 'w') as token:
-            token.write(creds.to_json())
-
-    def _initialize_imap(self, creds):
-        access_token = creds.token
-        email_response = requests.get('https://www.googleapis.com/oauth2/v1/userinfo',
-                                      headers={'Authorization': f'Bearer {access_token}'})
-        email_data = email_response.json()
-        email_address = email_data.get('email')
-        self.server = imapclient.IMAPClient('imap.gmail.com', ssl=True)
-        self.server.oauth2_login(email_address, creds.token)
+    def __init__(self, server):
+        self.server = server
 
     def fetch_unread_emails(self):
         if self.server is None:
@@ -115,12 +79,12 @@ class EmailProcessor:
             return False
 
 class EmailHandler:
-    def __init__(self):
-        self.email_manager = EmailManager()
+    def __init__(self, server):
+        self.server = server
+        self.email_manager = EmailManager(server)
         self.email_processor = EmailProcessor()
         self.current_email_data = None
         self.unread_emails = []
-        self.email_manager.login()
     
     def handle_next_unread_email(self):
         try:

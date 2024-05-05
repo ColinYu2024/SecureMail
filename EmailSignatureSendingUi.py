@@ -3,8 +3,9 @@ from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPu
 from EmailSignatureSender import EmailSender
 
 class EmailApp(QWidget):
-    def __init__(self):
+    def __init__(self, server):
         super().__init__()
+        self.server = server
         self.initUI()
 
     def initUI(self):
@@ -44,7 +45,7 @@ class EmailApp(QWidget):
         message = self.text_edit.toPlainText()
         if message:
             try:
-                email_sender = EmailSender()
+                email_sender = EmailSender(self.server)
                 email_sender.send_signed_email(recipient_email, subject, message)
                 QMessageBox.information(self, "Success", "Signed email sent successfully.")
             except Exception as e:

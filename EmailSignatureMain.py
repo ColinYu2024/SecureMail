@@ -1,15 +1,51 @@
 import sys
-from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QLabel
+from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QLabel, QDialog, QMessageBox
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt
 from EmailSignatureReaderUI import EmailViewer
 from EmailSignatureSendingUi import EmailApp
+from Login import LoginManager
 
-
-class EmailSignatureMain(QWidget):
+class LoginDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.creds = None
+        self.server = None
+
+    def initUI(self):
+        self.setWindowTitle('Login')
+        self.setGeometry(100, 100, 500, 300)
+
+        # Load and display logo
+        logo_label = QLabel(self)
+        pixmap = QPixmap('Logo.png')  
+        pixmap = pixmap.scaledToWidth(200)  
+        logo_label.setPixmap(pixmap)
+        logo_label.setAlignment(Qt.AlignCenter)
+
+        self.login_button = QPushButton('Log in with Google')
+        self.login_button.clicked.connect(self.handle_login)
+
+        layout = QVBoxLayout()
+        layout.addWidget(logo_label)
+        layout.addWidget(self.login_button)
+
+        self.setLayout(layout)
+
+    def handle_login(self):
+        loginmanager = LoginManager()
+        loginmanager.login()
+        self.creds = loginmanager.creds
+        self.server = loginmanager.server
+        if self.server != None:
+            self.accept()  # Close the login dialog and return QDialog.Accepted
+
+class EmailSignatureMain(QWidget):
+    def __init__(self, server):
+        super().__init__()
+        self.initUI()
+        self.server = server
 
     def initUI(self):
         self.setWindowTitle('Email Signature Main')
@@ -36,18 +72,29 @@ class EmailSignatureMain(QWidget):
         self.sender_button.clicked.connect(self.open_sender)
 
     def open_reader(self):
-        self.reader_window = EmailViewer()
+        self.reader_window = EmailViewer(self.server)
         self.reader_window.show()
 
     def open_sender(self):
-        self.sender_window = EmailApp()
+        self.sender_window = EmailApp(self.server)
         self.sender_window.show()
 
 def main():
     app = QApplication(sys.argv)
-    main_window = EmailSignatureMain()
-    main_window.show()
-    sys.exit(app.exec())
+
+    login_dialog = LoginDialog()
+
+    if login_dialog.exec() == QDialog.Accepted:
+        server = login_dialog.server
+
+        main_window = EmailSignatureMain(server)
+        main_window.show()
+
+        sys.exit(app.exec())
+    else:
+        QMessageBox.warning(None, "Login Failed", "Login was not successful. Exiting application.")
+        sys.exit()
+
 
 if __name__ == '__main__':
     main()

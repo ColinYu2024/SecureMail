@@ -5,10 +5,11 @@ from datetime import datetime
 
 
 class EmailViewer(QWidget):
-    def __init__(self):
+    def __init__(self, server):
         super().__init__()
+        self.server = server
         self.initUI()
-
+        
     def initUI(self):
         self.setWindowTitle('Email Viewer')
         self.setGeometry(100, 100, 600, 400)
@@ -35,7 +36,7 @@ class EmailViewer(QWidget):
 
         self.next_email_button.clicked.connect(self.handle_next_email)
 
-        self.email_handler = EmailHandler()
+        self.email_handler = EmailHandler(self.server)
         self.handle_next_email()
 
 

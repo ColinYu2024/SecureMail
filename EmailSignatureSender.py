@@ -8,44 +8,44 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 import requests
 
-class EmailClient:
-    def __init__(self, creds_path='cred.json', token_path='token.json'):
-        self.creds_path = creds_path
-        self.token_path = token_path
-        self.sender_email = None
-        self.service = None
+# class EmailClient:
+#     def __init__(self, creds_path='cred.json', token_path='token.json'):
+#         self.creds_path = creds_path
+#         self.token_path = token_path
+#         self.sender_email = None
+#         self.service = None
 
-    def _get_credentials(self):
-        return Credentials.from_authorized_user_file(self.token_path)
+#     def _get_credentials(self):
+#         return Credentials.from_authorized_user_file(self.token_path)
 
-    def initialize_service(self):
-        creds = self._get_credentials()
-        access_token = creds.token
-        email_response = requests.get('https://www.googleapis.com/oauth2/v1/userinfo',
-                                      headers={'Authorization': f'Bearer {access_token}'})
-        email_data = email_response.json()
-        self.sender_email = email_data.get('email')
-        self.service = build('gmail', 'v1', credentials=creds)
+#     def initialize_service(self):
+#         creds = self._get_credentials()
+#         access_token = creds.token
+#         email_response = requests.get('https://www.googleapis.com/oauth2/v1/userinfo',
+#                                       headers={'Authorization': f'Bearer {access_token}'})
+#         email_data = email_response.json()
+#         self.sender_email = email_data.get('email')
+#         self.service = build('gmail', 'v1', credentials=creds)
 
-    def send_email(self, message):
-        if not self.service:
-            raise ValueError("Gmail API service is not initialized. Call initialize_service first.")
-        print("sending email")
-        message = (self.service.users().messages().send(userId='me', body=message)
-                   .execute())
-        return message
+#     def send_email(self, message):
+#         if not self.service:
+#             raise ValueError("Gmail API service is not initialized. Call initialize_service first.")
+#         print("sending email")
+#         message = (self.service.users().messages().send(userId='me', body=message)
+#                    .execute())
+#         return message
 
-    def close_connection(self):
-        self.sender_email = None
-        self.service = None
+#     def close_connection(self):
+#         self.sender_email = None
+#         self.service = None
 
-    def load_credentials(self):
-        with open(self.creds_path, 'r') as creds_file:
-            return json.load(creds_file)
+#     def load_credentials(self):
+#         with open(self.creds_path, 'r') as creds_file:
+#             return json.load(creds_file)
 
 class EmailSender:
-    def __init__(self, creds_path='cred.json', token_path='token.json'):
-        self.email_client = EmailClient(creds_path, token_path)
+    def __init__(self, server):
+        self.server = server
 
     def send_signed_email(self, recipient_email, subject, body):
         self.email_client.initialize_service()
