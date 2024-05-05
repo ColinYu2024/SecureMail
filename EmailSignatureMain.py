@@ -12,6 +12,8 @@ class LoginDialog(QDialog):
         self.initUI()
         self.creds = None
         self.server = None
+        self.service = None
+        self.sender_email = None
 
     def initUI(self):
         self.setWindowTitle('Login')
@@ -38,14 +40,18 @@ class LoginDialog(QDialog):
         loginmanager.login()
         self.creds = loginmanager.creds
         self.server = loginmanager.server
+        self.service = loginmanager.service
+        self.sender_email = loginmanager.sender_email
         if self.server != None:
             self.accept()  # Close the login dialog and return QDialog.Accepted
 
 class EmailSignatureMain(QWidget):
-    def __init__(self, server):
+    def __init__(self, server, service, sender_email):
         super().__init__()
         self.initUI()
         self.server = server
+        self.service = service
+        self.sender_email = sender_email
 
     def initUI(self):
         self.setWindowTitle('Email Signature Main')
@@ -76,7 +82,8 @@ class EmailSignatureMain(QWidget):
         self.reader_window.show()
 
     def open_sender(self):
-        self.sender_window = EmailApp(self.server)
+        self.sender_window = EmailApp(self.service, self.sender_email)
+        print("I was here")
         self.sender_window.show()
 
 def main():
@@ -86,8 +93,10 @@ def main():
 
     if login_dialog.exec() == QDialog.Accepted:
         server = login_dialog.server
+        service = login_dialog.service
+        sender_email = login_dialog.sender_email
 
-        main_window = EmailSignatureMain(server)
+        main_window = EmailSignatureMain(server, service, sender_email)
         main_window.show()
 
         sys.exit(app.exec())

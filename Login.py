@@ -6,6 +6,7 @@ import imapclient
 from google.auth.transport.requests import Request as AuthRequest
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = 'True'
 
@@ -18,6 +19,8 @@ class LoginManager:
         self.token_path = token_path
         self.creds_path = creds_path
         self.server = None
+        self.service = None
+        self.sender_email = None
         self.creds = None
         self.login()
 
@@ -52,6 +55,7 @@ class LoginManager:
         email_response = requests.get('https://www.googleapis.com/oauth2/v1/userinfo',
                                       headers={'Authorization': f'Bearer {access_token}'})
         email_data = email_response.json()
-        email_address = email_data.get('email')
+        self.sender_email = email_data.get('email')
+        self.service = build('gmail', 'v1', credentials=self.creds)
         self.server = imapclient.IMAPClient('imap.gmail.com', ssl=True)
-        self.server.oauth2_login(email_address, self.creds.token)
+        self.server.oauth2_login(self.sender_email, self.creds.token)
