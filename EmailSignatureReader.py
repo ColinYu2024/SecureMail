@@ -119,9 +119,10 @@ class EmailHandler:
         self.email_manager = EmailManager()
         self.email_processor = EmailProcessor()
         self.current_email_data = None
-
-    def handle_next_unread_email(self):
+        self.unread_emails = []
         self.email_manager.login()
+    
+    def handle_next_unread_email(self):
         try:
             unread_emails = self.email_manager.fetch_unread_emails()
             if unread_emails:
@@ -131,7 +132,7 @@ class EmailHandler:
                 print("No unread emails found. Exiting...")
         except Exception as e:
             print("An error occurred:", e)
-        self.email_manager.server.logout()
+        
     def process_email(self, msgid):
         try:
             email_data = self.email_manager.fetch_email_data(msgid)
@@ -168,7 +169,12 @@ class EmailHandler:
                     print("Email saved.")
                     self.current_email_data = Message(cleaned_from, date, cleaned_subject, email_body, bool(signature))
                 else:
+                    print("Signature not found. Assuming email is not signed.")
+                    self.label_email(msgid, None, email_body, None)
                     print("This email has no text.")
+                    self.save_email(data, cleaned_subject, cleaned_from)
+                    print("Email saved.")
+                    self.current_email_data = Message(cleaned_from, date, cleaned_subject, email_body, False)
         except Exception as e:
             print("Error processing email:", e)
 

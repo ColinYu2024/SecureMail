@@ -38,6 +38,7 @@ class EmailViewer(QWidget):
         self.email_handler = EmailHandler()
         self.handle_next_email()
 
+
     def handle_next_email(self):
         self.email_handler.handle_next_unread_email()
         email_data = self.email_handler.get_email_data()
