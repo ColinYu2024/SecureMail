@@ -2,7 +2,7 @@
 # SecureMail Project
 
 ## Overview
-SecureMail is an application designed to read and send signed emails. It lets users read and verify emails as well as signed emails. This program was designed to verify if the email you have received is truely from the person who sent it with a signed hash signature.
+SecureMail is an application designed to read and send signed emails. It lets users read and verify emails as well as sign emails. This program was designed to verify if the email you have received is truly from the person who sent it with a signed hash signature.
 This application is only a proof of concept as many features are very limited in scope and currently can only verify emails sent by this program.
 
 ## Intended Features
