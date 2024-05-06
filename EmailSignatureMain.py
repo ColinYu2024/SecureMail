@@ -83,7 +83,6 @@ class EmailSignatureMain(QWidget):
 
     def open_sender(self):
         self.sender_window = EmailApp(self.service, self.sender_email)
-        print("I was here")
         self.sender_window.show()
 
 def main():

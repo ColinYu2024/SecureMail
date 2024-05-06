@@ -11,9 +11,11 @@ from dataclasses import dataclass
 
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = 'True'
 
+# Define OAuth scopes - can only access gmail
 SCOPES = ['https://mail.google.com/', 'https://www.googleapis.com/auth/gmail.readonly',
           'https://www.googleapis.com/auth/gmail.modify', 'https://www.googleapis.com/auth/userinfo.email']
 
+# Dataclass for representing an email message
 @dataclass
 class Message:
     sender: str
@@ -26,12 +28,14 @@ class EmailManager:
     def __init__(self, server):
         self.server = server
 
+    # Fetch unread emails from the server
     def fetch_unread_emails(self):
         if self.server is None:
             raise ValueError("IMAP server not initialized.")
         self.server.select_folder("INBOX")
         return self.server.search("UNSEEN")
 
+    # Fetch email data for a specific message ID
     def fetch_email_data(self, msgid):
         return self.server.fetch(msgid, "RFC822").items()
 
@@ -39,6 +43,7 @@ class EmailProcessor:
     def __init__(self):
         pass
 
+    # Clean filename by replacing invalid characters
     @staticmethod
     def clean_filename(filename):
         cleaned_filename = re.sub(r'[\\/:*?"<>|]', '_', filename)
@@ -46,7 +51,8 @@ class EmailProcessor:
         if len(cleaned_filename) > max_filename_length:
             cleaned_filename = cleaned_filename[:max_filename_length]
         return cleaned_filename
-
+    
+    # Decode email header
     @staticmethod
     def decode_email_header(header):
         value, encoding = decode_header(header)[0]
@@ -54,6 +60,7 @@ class EmailProcessor:
             value = value.decode(encoding)
         return value
 
+    # Decrypt email signature using public key
     @staticmethod
     def decrypt_signature(public_key_str, email_body, signature):
         try:
