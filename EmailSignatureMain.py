@@ -5,6 +5,18 @@ from PySide6.QtCore import Qt
 from EmailSignatureReaderUI import EmailViewer
 from EmailSignatureSendingUi import EmailApp
 from Login import LoginManager
+import os
+
+print(os.environ)  # or log this information to a file
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class LoginDialog(QDialog):
     def __init__(self):
@@ -21,7 +33,7 @@ class LoginDialog(QDialog):
 
         # Load and display logo
         logo_label = QLabel(self)
-        pixmap = QPixmap('Logo.png')  
+        pixmap = QPixmap(resource_path("Logo.png"))  
         pixmap = pixmap.scaledToWidth(200)  
         logo_label.setPixmap(pixmap)
         logo_label.setAlignment(Qt.AlignCenter)
@@ -59,7 +71,7 @@ class EmailSignatureMain(QWidget):
 
         # Load and display logo
         logo_label = QLabel(self)
-        pixmap = QPixmap('Logo.png')  
+        pixmap = QPixmap(resource_path('Logo.png'))  
         pixmap = pixmap.scaledToWidth(200)  
         logo_label.setPixmap(pixmap)
         logo_label.setAlignment(Qt.AlignCenter)

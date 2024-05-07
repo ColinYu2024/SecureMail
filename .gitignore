@@ -3,3 +3,5 @@ emails/
 __pycache__/
 token.json
 credentials.json
+Old/
+build/

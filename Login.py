@@ -2,6 +2,7 @@ import os
 import datetime
 import requests
 import imapclient
+import sys
 
 from google.auth.transport.requests import Request as AuthRequest
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -13,9 +14,16 @@ os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = 'True'
 SCOPES = ['https://mail.google.com/', 'https://www.googleapis.com/auth/gmail.readonly',
           'https://www.googleapis.com/auth/gmail.modify', 'https://www.googleapis.com/auth/userinfo.email']
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class LoginManager:
-    def __init__(self, token_path='token.json', creds_path='credentials.json'):
+    def __init__(self, token_path=resource_path('token.json'), creds_path=resource_path('credentials.json')):
         self.token_path = token_path
         self.creds_path = creds_path
         self.server = None
@@ -38,7 +46,7 @@ class LoginManager:
 
     def _refresh_credentials(self):
         if not self.creds or not self.creds.expired:
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(resource_path('credentials.json'), SCOPES)
             self.creds = flow.run_local_server(port=0)
             expiry_time = datetime.datetime.now() + datetime.timedelta(seconds=3600)  # 1 hour
             self.creds.expiry = expiry_time
